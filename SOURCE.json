@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/wrestle-R/Linux",
+  "commit": "e9baeebf24fa0917f94c9394ef3f3fcef29e7f31",
+  "path": "End-4/slumber/",
+  "snapshot": "committed baseline before the in-progress 2026-11-09 login and Dell charge-mode fixes",
+  "sha256": {
+    "theme/Main.qml": "5c8a199efc65eeb599ebacae0054f8df672660ee93eda1418ca40946fa28dfa6",
+    "theme/metadata.desktop": "447823c8e41658b63666c95f3b05e92fb1fc217c5876fd7305233ca0e337f065",
+    "theme/theme.conf": "e0f4d286ed9d441ca28f540093895b0fd3d5234a94c6b00644f2f61034ed5ee1"
+  }
+}

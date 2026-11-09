@@ -1,0 +1,8 @@
+/local-docs/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+/wallpaper.jpg
+/theme/wallpaper.jpg
