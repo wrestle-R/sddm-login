@@ -1,5 +1,7 @@
 # SDDM login
 
+**Supported platform: Arch Linux + Hyprland only.** Other distributions, compositors and operating systems are outside this repo's supported setup.
+
 My wallpaper-based SDDM login screen, pulled into its own repo so the theme and setup are easy to find.
 
 ## Version
