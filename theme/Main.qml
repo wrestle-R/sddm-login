@@ -7,7 +7,7 @@ Rectangle {
     id: root
     width: 1920
     height: 1200
-    color: "#162c40"
+    color: "#102338"
     // Injectable only for the isolated native preview. SDDM supplies these objects.
     property var authBackend: sddm
     property var users: userModel
@@ -32,12 +32,6 @@ Rectangle {
     readonly property real fit: Math.min(width / 1600, height / 1000)
     Timer { interval: 1000; running: true; repeat: true; onTriggered: root.now = new Date() }
 
-    function queueEntry() {
-        if (!entryQueued && frameSeen && backdrop.status !== Image.Loading && intro.status !== Image.Loading) {
-            entryQueued = true;
-            entryDelay.start();
-        }
-    }
     function login() {
         if (submitting) return;
         if (!username.text.trim()) { notice = "Enter your username."; username.forceActiveFocus(); return; }
@@ -49,150 +43,59 @@ Rectangle {
         // Authentication never waits for animation timers or frame delivery.
         root.authBackend.login(username.text.trim(), password.text, session.currentIndex);
     }
-    Connections {
-        target: root.Window.window
-        function onFrameSwapped() {
-            if (!root.frameSeen) root.frameSeen = true;
-            root.queueEntry();
-        }
-    }
-    Timer { id: entryDelay; interval: 180; onTriggered: entryMotion.start() }
-    Timer {
-        interval: 1800; running: true
-        onTriggered: { if (!root.entryQueued) { root.entryQueued = true; entryMotion.start(); } }
-    }
-    ParallelAnimation {
-        id: entryMotion
-        NumberAnimation { target: root; property: "introOpacity"; to: 0; duration: 1350; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "landscapeScale"; to: 1; duration: 1600; easing.type: Easing.OutCubic }
-        SequentialAnimation { PauseAnimation { duration: 100 } NumberAnimation { target: root; property: "clockOpacity"; to: 1; duration: 850; easing.type: Easing.OutCubic } }
-        SequentialAnimation {
-            PauseAnimation { duration: 180 }
-            ParallelAnimation {
-                NumberAnimation { target: root; property: "haloOpacity"; to: 1; duration: 1050; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "haloRotation"; to: 0; duration: 1400; easing.type: Easing.OutCubic }
-            }
-        }
-        SequentialAnimation {
-            PauseAnimation { duration: 400 }
-            ParallelAnimation {
-                NumberAnimation { target: root; property: "formOpacity"; to: 1; duration: 700; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "formOffset"; to: 0; duration: 900; easing.type: Easing.OutCubic }
-            }
-        }
-        SequentialAnimation { PauseAnimation { duration: 550 } NumberAnimation { target: root; property: "detailsOpacity"; to: 1; duration: 750 } }
-    }
     Component.onCompleted: Qt.callLater(function() {
         if (username.text.length) password.forceActiveFocus(); else username.forceActiveFocus();
     })
 
-    // Setup bakes both blur levels. No shader, live blur or background worker.
-    Image {
-        id: backdrop
-        anchors.fill: parent
-        source: "wallpaper-blurred.jpg"
-        fillMode: Image.PreserveAspectCrop
-        scale: root.landscapeScale
-        onStatusChanged: root.queueEntry()
-    }
-    Image {
-        id: intro
-        anchors.fill: parent
-        source: "wallpaper-intro.jpg"
-        fillMode: Image.PreserveAspectCrop
-        opacity: root.introOpacity
-        visible: opacity > 0.001
-        scale: root.landscapeScale
-        onStatusChanged: root.queueEntry()
-    }
-    Rectangle {
-        anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0; color: "#a64a6791" }
-            GradientStop { position: 0.38; color: "#8a243f60" }
-            GradientStop { position: 0.7; color: "#85102338" }
-            GradientStop { position: 1; color: "#ed041225" }
-        }
-    }
-    Canvas {
-        anchors.fill: parent
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        onPaint: {
-            const c=getContext("2d"); c.reset();
-            const x=width*0.73, y=height*0.31, r=Math.min(width,height)*0.27;
-            const glow=c.createRadialGradient(x,y,0,x,y,r);
-            glow.addColorStop(0,"rgba(255,198,145,0.48)");
-            glow.addColorStop(0.48,"rgba(255,203,155,0.30)");
-            glow.addColorStop(1,"rgba(255,203,155,0)");
-            c.fillStyle=glow;c.fillRect(0,0,width,height);
-        }
-    }
+    Image { anchors.fill: parent; source: "wallpaper.jpg"; fillMode: Image.PreserveAspectCrop }
+    Rectangle { anchors.fill: parent; gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 0.65; color: "#1011263b" } GradientStop { position: 1; color: "#90102338" } } }
     Item {
         id: stage
         width: 1600; height: 1000
         anchors.centerIn: parent
         scale: root.fit
         transformOrigin: Item.Center
-        Row {
-            x: 60; y: 42
-            spacing: 15
-            opacity: root.detailsOpacity
-            Rectangle { width: 2; height: 21; color: root.accent }
-            Text { text: "hyprland"; color: root.ink; font.family: "Noto Sans"; font.pixelSize: 17; font.weight: Font.DemiBold }
-        }
-
-        Item {
-            x: 510; y: 172; width: 580; height: 430
-            opacity: root.haloOpacity
-            rotation: root.haloRotation
-            HaloArc { anchors.fill: parent; lower: false }
-            HaloArc { anchors.fill: parent; lower: true }
-        }
-        Column {
-            x: 500; y: 316; width: 600; spacing: 9
-            opacity: root.clockOpacity
-            Text {
-                width: parent.width; height: 145
-                text: Qt.formatDateTime(root.now, "hh:mm")
-                color: root.ink
-                font.family: "Noto Sans"
-                font.pixelSize: 132
-                font.weight: Font.ExtraLight
-                font.letterSpacing: -5
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            Text {
-                width: parent.width
-                text: Qt.formatDateTime(root.now, "dddd, d MMMM")
-                color: root.ink
-                font.family: "Noto Sans"
-                font.pixelSize: 21
-                font.weight: Font.Normal
-                horizontalAlignment: Text.AlignHCenter
+        Canvas {
+            id: clockFace
+            x: 945; y: 165; width: 565; height: 115
+            property string timeText: Qt.formatDateTime(root.now, "hhmm")
+            onTimeTextChanged: requestPaint()
+            onPaint: {
+                const c=getContext("2d"); c.reset(); c.fillStyle="#183247";
+                const maps=["111101101101111","010110010010111","111001111100111","111001111001111","101101111001001","111100111001111","111100111101111","111001001001001","111101111101111","111101111001111"];
+                const unit=height/5;
+                for(let n=0;n<4;n++) {
+                    const digit=Number(timeText[n]); const x=n*width/4;
+                    if(digit===1) { c.fillRect(x+unit,0,unit,unit*4); c.fillRect(x,unit*4,unit*3,unit); c.fillRect(x,0,unit,unit); }
+                    else if(digit===4) { c.fillRect(x,0,unit,unit*2); c.fillRect(x,unit*2,unit*3,unit); c.fillRect(x+unit*2,0,unit,unit*5); }
+                    else { const map=maps[digit]; for(let i=0;i<15;i++) if(map[i]==="1") c.fillRect(x+(i%3)*unit,Math.floor(i/3)*unit,unit,unit); }
+                }
             }
         }
+        Text { x: 945; y: 310; width: 540; text: Qt.formatDateTime(root.now,"dddd, d MMMM"); color: "#183247"; font.family: "Noto Sans"; font.pixelSize: 27; horizontalAlignment: Text.AlignRight }
         Item {
             id: auth
             objectName: "authControls"
-            x: 530; y: 550; width: 550; height: 220
-            opacity: root.formOpacity
-            transform: Translate { y: root.formOffset }
+            x: 1025; y: 560; width: 460; height: 270
+            opacity: 1
+            
+            StrokeIcon { x: 427; y: 18; width: 19; height: 19; glyph: "down"; ink: root.ink }
             TextField {
                 id: username
                 objectName: "usernameField"
-                x: 105; y: 0; width: 330; height: 32
+                x: 0; y: 0; width: 460; height: 55
                 text: root.users.lastUser || ""
                 placeholderText: "Username"
                 color: root.muted
                 placeholderTextColor: root.muted
-                selectionColor: root.accent
+                selectionColor: root.ink
                 selectedTextColor: "#172838"
-                font.family: "Noto Sans"; font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
+                font.family: "Noto Sans"; font.pixelSize: 27
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: 0; rightPadding: 48
                 enabled: !root.submitting
-                background: Rectangle { radius: 16; color: username.activeFocus ? "#45142334" : "transparent"; border.width: username.activeFocus ? 1 : 0; border.color: root.accent }
+                background: Rectangle { radius: 16; color: username.activeFocus ? "#45142334" : "transparent"; border.width: username.activeFocus ? 1 : 0; border.color: root.ink }
                 onAccepted: password.forceActiveFocus()
                 Accessible.name: "Username"
                 KeyNavigation.tab: password
@@ -200,77 +103,64 @@ Rectangle {
             TextField {
                 id: password
                 objectName: "passwordField"
-                x: 0; y: 58; width: 466; height: 58
+                x: 0; y: 90; width: 460; height: 58
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhSensitiveData | Qt.ImhNoPredictiveText
-                placeholderText: "Enter your password"
+                placeholderText: "Password"
                 placeholderTextColor: "#d1c7b9"
                 color: root.ink
-                selectionColor: root.accent
+                selectionColor: root.ink
                 selectedTextColor: "#172838"
                 font.family: "Noto Sans"; font.pixelSize: 17
-                leftPadding: 65; rightPadding: 58
+                leftPadding: 0; rightPadding: 100
                 enabled: !root.submitting
                 onAccepted: root.login()
                 Keys.onEscapePressed: clear()
                 KeyNavigation.tab: reveal
                 Accessible.name: "Password"
-                background: Rectangle {
-                    radius: height / 2
-                    gradient: Gradient { GradientStop { position: 0; color: "#66334654" } GradientStop { position: 1; color: "#a8172a3a" } }
-                    border.width: 1
-                    border.color: root.loginError ? "#efb4a6" : password.activeFocus ? "#f2d5ac" : "#9abbaa91"
-                    Behavior on border.color { ColorAnimation { duration: 160 } }
-                }
-                StrokeIcon { x: 26; anchors.verticalCenter: parent.verticalCenter; width: 23; height: 23; glyph: "lock"; ink: root.accent }
+                background: Rectangle { color: "transparent"; Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.loginError ? "#ffb4a6" : password.activeFocus ? "#fff3df" : "#a0e0e8e7" } }
                 Button {
                     id: reveal
-                    x: parent.width - width - 11; anchors.verticalCenter: parent.verticalCenter
+                    x: parent.width - width - 54; anchors.verticalCenter: parent.verticalCenter
                     width: 38; height: 38
                     enabled: !root.submitting
                     checkable: true
                     onToggled: password.echoMode = checked ? TextInput.Normal : TextInput.Password
                     KeyNavigation.tab: signIn
                     Accessible.name: checked ? "Hide password" : "Show password"
-                    contentItem: StrokeIcon { glyph: "eye"; ink: root.accent }
+                    contentItem: StrokeIcon { glyph: "eye"; ink: root.ink }
                     padding: 8
-                    background: Rectangle { radius: 19; color: reveal.hovered || reveal.activeFocus ? "#25f1c893" : "transparent"; border.width: reveal.activeFocus ? 1 : 0; border.color: root.accent }
+                    background: Rectangle { radius: 19; color: reveal.hovered || reveal.activeFocus ? "#25f1c893" : "transparent"; border.width: reveal.activeFocus ? 1 : 0; border.color: root.ink }
                 }
             }
             Button {
                 id: signIn
                 objectName: "signInButton"
-                x: 490; y: 58; width: 58; height: 58
+                x: 412; y: 90; width: 48; height: 58
                 enabled: !root.submitting
                 Accessible.name: "Sign in"
                 KeyNavigation.tab: session
                 onClicked: root.login()
                 scale: down ? 0.95 : hovered ? 1.035 : 1
                 Behavior on scale { NumberAnimation { duration: 140 } }
-                contentItem: StrokeIcon { glyph: "arrow"; ink: "#253340" }
+                contentItem: StrokeIcon { glyph: "arrow"; ink: root.ink }
                 padding: 18
-                background: Rectangle {
-                    radius: height / 2
-                    gradient: Gradient { GradientStop { position: 0; color: signIn.hovered ? "#ffe3bb" : "#fbd5a3" } GradientStop { position: 1; color: "#edbb80" } }
-                    border.width: signIn.activeFocus ? 2 : 1
-                    border.color: signIn.activeFocus ? "#fff5e5" : "#f8dcb5"
-                }
+                background: Rectangle { color: signIn.activeFocus || signIn.hovered ? "#25ffffff" : "transparent"; radius: 4 }
             }
             ComboBox {
                 id: session
                 objectName: "sessionPicker"
-                x: 34; y: 138; width: 430; height: 51
+                x: 0; y: 167; width: 460; height: 55
                 model: root.sessions
                 textRole: "name"
                 currentIndex: root.sessions.lastIndex >= 0 ? root.sessions.lastIndex : 0
                 enabled: !root.submitting
-                leftPadding: 60; rightPadding: 45
+                leftPadding: 0; rightPadding: 48
                 KeyNavigation.tab: sleepButton.visible ? sleepButton : restartButton.visible ? restartButton : powerButton
                 Accessible.name: "Session"
                 contentItem: Text { text: session.displayText; color: root.ink; font.family: "Noto Sans"; font.pixelSize: 17; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
-                indicator: StrokeIcon { x: session.width-width-19; anchors.verticalCenter: parent.verticalCenter; width: 19; height: 19; glyph: "down"; ink: root.ink }
-                background: Rectangle { radius: height / 2; color: session.hovered ? "#70334958" : "#73203545"; border.width: 1; border.color: session.activeFocus ? root.accent : "#8bb9aa94"; Behavior on color { ColorAnimation { duration: 160 } } }
-                StrokeIcon { x: 24; anchors.verticalCenter: parent.verticalCenter; width: 24; height: 24; glyph: "layers"; ink: root.ink }
+                indicator: StrokeIcon { x: session.width-width-14; anchors.verticalCenter: parent.verticalCenter; width: 19; height: 19; glyph: "down"; ink: root.ink }
+                background: Rectangle { color: session.activeFocus ? "#20ffffff" : "transparent"; radius: 4 }
                 delegate: ItemDelegate {
                     required property var model
                     required property int index
@@ -289,21 +179,21 @@ Rectangle {
             Text {
                 id: message
                 objectName: "authMessage"
-                x: -20; y: 199; width: 590; height: 40
+                x: 0; y: 225; width: 460; height: 40
                 text: root.notice
                 textFormat: Text.PlainText
                 wrapMode: Text.Wrap
                 color: root.loginError ? "#ffd0be" : root.muted
-                font.family: "Noto Sans"; font.pixelSize: 14
+                font.family: "Noto Sans"; font.pixelSize: 27
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 Accessible.role: Accessible.AlertMessage
             }
         }
         Row {
-            x: (parent.width-width)/2; y: 852
-            spacing: 24
-            opacity: root.detailsOpacity
+            x: 1025; y: 895
+            spacing: 12
+            opacity: 1
             QuietButton { id: sleepButton; text: "Sleep"; glyph: "moon"; visible: root.authBackend.canSuspend; onClicked: root.authBackend.suspend(); KeyNavigation.tab: restartButton.visible ? restartButton : powerButton }
             QuietButton { id: restartButton; text: "Restart"; glyph: "restart"; visible: root.authBackend.canReboot; onClicked: root.authBackend.reboot(); KeyNavigation.tab: powerButton.visible ? powerButton : username }
             QuietButton { id: powerButton; text: "Shut down"; glyph: "power"; visible: root.authBackend.canPowerOff; onClicked: root.authBackend.powerOff(); KeyNavigation.tab: username }
@@ -327,15 +217,15 @@ Rectangle {
         property string glyph
         implicitWidth: text === "Shut down" ? 160 : 145
         implicitHeight: 45
-        padding: 17
+        padding: 10
         scale: down ? 0.975 : 1
         Behavior on scale { NumberAnimation { duration: 120 } }
         contentItem: RowLayout {
             spacing: 11
-            StrokeIcon { width: 19; height: 19; glyph: control.glyph; ink: root.accent }
+            StrokeIcon { width: 19; height: 19; glyph: control.glyph; ink: root.ink }
             Text { text: control.text; color: root.ink; font.family: "Noto Sans"; font.pixelSize: 14; verticalAlignment: Text.AlignVCenter }
         }
-        background: Rectangle { radius: height / 2; color: control.hovered ? "#663c4c58" : "#25102437"; border.width: 1; border.color: control.activeFocus ? root.accent : "#708a8b88"; Behavior on color { ColorAnimation { duration: 160 } } }
+        background: Rectangle { radius: height / 2; color: control.hovered ? "#663c4c58" : "#25102437"; border.width: 1; border.color: control.activeFocus ? root.ink : "#708a8b88"; Behavior on color { ColorAnimation { duration: 160 } } }
     }
     component HaloArc: Canvas {
         property bool lower: false

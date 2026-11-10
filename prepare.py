@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--output',type=Path,required=True,help='New directory; existing paths are refused')
     args=parser.parse_args()
     files={name:(HERE/'theme'/name).read_bytes() for name in ['Main.qml','metadata.desktop','theme.conf']}
-    files.update(blurred_wallpapers(args.wallpaper))
+    files["wallpaper.jpg"]=args.wallpaper.read_bytes()
     validate_theme(files)
     args.output.mkdir(mode=0o700,parents=False,exist_ok=False)
     try:
