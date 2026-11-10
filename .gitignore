@@ -6,3 +6,6 @@ __pycache__/
 !.env.example
 /wallpaper.jpg
 /theme/wallpaper.jpg
+
+/theme/wallpaper-blurred.jpg
+/theme/wallpaper-intro.jpg

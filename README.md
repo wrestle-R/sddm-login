@@ -1,71 +1,55 @@
 # SDDM login
 
-**Supported platform: Arch Linux + Hyprland only.** Other distributions, compositors and operating systems are outside this repo's supported setup.
+**Supported platform: Arch Linux + Hyprland only.**
 
-My wallpaper-based SDDM login screen, pulled into its own repo so the theme and setup are easy to find.
+Twin Halo: a strongly blurred landscape, two warm arcs, a large clock and floating password/session controls. This is the selected design, synced from the reviewed Linux source recorded in `SOURCE.json`.
 
-## Version
+SDDM handles login and session selection. The sibling Slumber repo covers the in-session lockscreen, display-off mode, notifications and charging controls. No PAM or bootloader changes are needed.
 
-This is the committed baseline from Linux `e9baeebf24fa0917f94c9394ef3f3fcef29e7f31`. The main desktop thread is currently reworking the layout and animations; **that redesign is not included yet**. `SOURCE.json` records the exact source and file hashes.
+## Prepare and preview
 
-SDDM is the login/session chooser. This package does not theme the bootloader or the in-session lockscreen. The sibling `slumber` repo covers locking and display-off behaviour.
+Requires Python3, ImageMagick (`magick`), Qt6 SDDM (`sddm-greeter-qt6`), QtQuick, Controls and Layouts. No QtQuick.Effects shader is required. Bring your own wallpaper; images are not uploaded.
 
-## Files and dependencies
-
-`theme/Main.qml` contains the login form, session selection, power controls and entry animation. `metadata.desktop` declares SDDM Theme API 2.0 / Qt 6. `theme.conf` records the wallpaper filename. The QML imports QtQuick, QtQuick.Controls, QtQuick.Layouts and QtQuick.Effects; these modules and a Qt 6 SDDM greeter must be installed before previewing.
-
-Bring your own JPEG as `theme/wallpaper.jpg`. The original used `~/Pictures/Wallpapers/hehe.jpg`; personal wallpaper files are deliberately gitignored and not uploaded. The source code currently loads the fixed filename `wallpaper.jpg`.
-
-## Preview first
-
-From this repo, copy a wallpaper and run the greeter in test mode as your regular user:
+Choose a directory that does not exist:
 
 ```bash
-cp "$HOME/Pictures/Wallpapers/hehe.jpg" theme/wallpaper.jpg
-sddm-greeter-qt6 --test-mode --theme "$PWD/theme"
+python3 prepare.py --wallpaper "$HOME/Pictures/Wallpapers/hehe.jpg" --output /tmp/rdp-login-preview
+sddm-greeter-qt6 --test-mode --theme /tmp/rdp-login-preview
 ```
 
-This opens a native test window; it does not replace the running login manager. Check the wallpaper, keyboard focus, form layout, session list and animation. Test mode does not prove real password authentication. Save work before testing a normal logout/login later.
+Preparation bakes two blur levels and validates the complete theme in SDDM's software-rendered test mode. Missing dependencies, conversion errors or invalid QML stop before writing the output directory. Existing output directories are refused. Remove only your disposable preview directory before preparing again.
 
-## Install without restarting SDDM
+The entry starts after the first presented frame and fades/rises over at most1.6seconds. Settled blur is a static JPEG; there is no continuous shader or animation loop. Password submission starts immediately, independent of animation. Failure clears and masks the password and restores focus. Text messages stay plain text. Missing background images retain a dark background with usable controls.
 
-Use a separate theme name so the original desktop package is preserved. First inspect existing choices:
+## Install and recover
 
-```bash
-rg -n 'Current=|ThemeDir=' /etc/sddm.conf /etc/sddm.conf.d /usr/lib/sddm/sddm.conf.d
-```
+On the source machine, the existing guarded installer in `Linux/End-4/slumber/install-system.py` manages `/usr/share/sddm/themes/rdp-slumber` and `/etc/sddm.conf.d/90-rdp-slumber.conf`. Use that installer and its printed backup for updates to this existing installation; it also manages the battery helper. See the sibling `slumber/source/README.md` for exact commands. It checks existing file hashes, validates the staged theme, backs up changes and rolls back partial writes. It never restarts SDDM.
 
-Some paths may not exist. Review effective config precedence, including any `Current` in `/etc/sddm.conf`, before choosing the override. On the source machine the original package uses `/etc/sddm.conf.d/90-rdp-slumber.conf`.
-
-For a first installation, ensure BOTH paths below do not already exist; if either exists, stop and back up/review it rather than overwriting. These commands create new paths and do not restart SDDM:
+For an independent first installation, use a separate theme name. Check configuration precedence (`Current`/`ThemeDir` in `/etc/sddm.conf` and config directories) first. Both paths below must be absent; if either exists, stop and review/back up it:
 
 ```bash
 sudo test ! -e /usr/share/sddm/themes/rdp-login
 sudo test ! -e /etc/sddm.conf.d/91-rdp-login.conf
 ```
 
-Proceed only if both checks succeeded:
+Only after both checks succeed and the native preview loads:
 
 ```bash
-sudo install -d -m 755 /usr/share/sddm/themes/rdp-login
-sudo install -m 644 theme/Main.qml theme/metadata.desktop theme/theme.conf theme/wallpaper.jpg /usr/share/sddm/themes/rdp-login/
+sudo install -d -m755 /usr/share/sddm/themes/rdp-login
+sudo install -m644 /tmp/rdp-login-preview/Main.qml /tmp/rdp-login-preview/metadata.desktop /tmp/rdp-login-preview/theme.conf /tmp/rdp-login-preview/wallpaper-blurred.jpg /tmp/rdp-login-preview/wallpaper-intro.jpg /usr/share/sddm/themes/rdp-login/
 printf '[Theme]\nCurrent=rdp-login\n' | sudo tee /etc/sddm.conf.d/91-rdp-login.conf
 ```
 
-The theme becomes active at the next normal login if this override is effective. It keeps SDDM's authentication and session handling. Never restart SDDM with unsaved apps running. Keep a working fallback theme installed.
-
-## Rollback and updates
-
-To disable only this repo's newly created override, move it aside from a working session or TTY:
+This takes effect at the next normal login. Keep Breeze installed. Never restart SDDM with unsaved apps. To return to the earlier theme selection, move only this new override aside:
 
 ```bash
 sudo mv /etc/sddm.conf.d/91-rdp-login.conf /etc/sddm.conf.d/91-rdp-login.conf.disabled
 ```
 
-The prior theme selection then applies at the next normal login. Leave the installed theme directory in place until recovery is confirmed. This does not change the historical `90-rdp-slumber.conf` override or Slumber files.
+For future source updates, retain private backups, preview first and use the guarded canonical installer rather than overwriting local edits. Git pull updates source only.
 
-Before later updates, back up the installed theme and active override to a private timestamped directory, preview the new source, and retain that backup through a successful login. Do not overwrite existing local edits blindly. Git pulls update source files only.
+## Verification
 
-## Source
+Canonical `test_sddm.py` passed: offline/deterministic blur preparation, conversion failure before writes, invalid-QML refusal, actual SDDM software rendering and missing-image loading, native mock-auth validation, duplicate suppression, password clearing/masking, focus and bounded motion. Actual Enter/Escape/Tab were exercised in a disposable preview. A normal password login and reboot after installation still need user verification; test mode cannot prove those.
 
-[Original theme](https://github.com/wrestle-R/Linux/tree/e9baeebf24fa0917f94c9394ef3f3fcef29e7f31/End-4/slumber/sddm). Original author and MIT license declaration remain in `theme/metadata.desktop`. No new license grant is inferred for unrelated files.
+The exact theme and shared `theme_tools.py` hashes are recorded in `SOURCE.json`. Original author/MIT theme declaration remains in `theme/metadata.desktop`; no personal wallpaper, credentials or private notes are included.
