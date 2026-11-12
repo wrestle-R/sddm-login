@@ -2,7 +2,9 @@
 
 **Arch Linux + Hyprland only.** I wanted a little personalization and wanted my login screen to look better, so I made this.
 
-![Current login theme, captured in SDDM test mode](docs/login.png)
+![Edited presentation of the login theme](docs/login-polished.png)
+
+[Original screenshot](docs/login.png)
 
 A simple login screen with a geometric clock and my wallpaper. [Setup and preview instructions](GUIDE.md).
 
