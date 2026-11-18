@@ -15,20 +15,14 @@ Rectangle {
     property date now: new Date()
     property bool submitting: false
     property bool loginError: false
-    property bool frameSeen: false
-    property bool entryQueued: false
-    property real introOpacity: 1
-    property real landscapeScale: 1.025
-    property real clockOpacity: 0
-    property real haloOpacity: 0
-    property real haloRotation: -7
-    property real formOpacity: 0
-    property real formOffset: 18
-    property real detailsOpacity: 0
     property string notice: ""
     readonly property color ink: "#f8ead7"
     readonly property color muted: "#c9cdd0"
-    readonly property color accent: "#f1c893"
+    readonly property int rowWidth: 460
+    readonly property int rowHeight: 58
+    readonly property int rowGap: 22
+    readonly property int fieldInset: 15
+    readonly property int fieldFontSize: 20
     readonly property real fit: Math.min(width / 1600, height / 1000)
     Timer { interval: 1000; running: true; repeat: true; onTriggered: root.now = new Date() }
 
@@ -76,26 +70,29 @@ Rectangle {
         Item {
             id: auth
             objectName: "authControls"
-            x: 1025; y: 560; width: 460; height: 270
-            opacity: 1
-            
-            StrokeIcon { x: 427; y: 18; width: 19; height: 19; glyph: "down"; ink: root.ink }
+            x: 1025; y: 560; width: root.rowWidth
+            height: message.y + message.height
             TextField {
                 id: username
                 objectName: "usernameField"
-                x: 0; y: 0; width: 460; height: 55
+                width: parent.width; height: root.rowHeight
                 text: root.users.lastUser || ""
                 placeholderText: "Username"
-                color: root.muted
-                placeholderTextColor: root.muted
+                color: root.ink
+                placeholderTextColor: root.ink
                 selectionColor: root.ink
                 selectedTextColor: "#172838"
-                font.family: "Noto Sans"; font.pixelSize: 27
+                font.family: "Noto Sans"; font.pixelSize: root.fieldFontSize
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-                leftPadding: 0; rightPadding: 48
+                leftPadding: root.fieldInset; rightPadding: root.fieldInset
                 enabled: !root.submitting
-                background: Rectangle { radius: 16; color: username.activeFocus ? "#45142334" : "transparent"; border.width: username.activeFocus ? 1 : 0; border.color: root.ink }
+                background: Rectangle {
+                    radius: 16
+                    color: username.activeFocus ? "#99142334" : "#69142334"
+                    border.width: username.activeFocus ? 2 : 1
+                    border.color: username.activeFocus ? root.ink : "#a8f8ead7"
+                }
                 onAccepted: password.forceActiveFocus()
                 Accessible.name: "Username"
                 KeyNavigation.tab: password
@@ -103,40 +100,51 @@ Rectangle {
             TextField {
                 id: password
                 objectName: "passwordField"
-                x: 0; y: 90; width: 460; height: 58
+                anchors.top: username.bottom
+                anchors.topMargin: root.rowGap
+                width: parent.width; height: root.rowHeight
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhSensitiveData | Qt.ImhNoPredictiveText
                 placeholderText: "Password"
-                placeholderTextColor: "#d1c7b9"
+                placeholderTextColor: root.ink
                 color: root.ink
                 selectionColor: root.ink
                 selectedTextColor: "#172838"
-                font.family: "Noto Sans"; font.pixelSize: 17
-                leftPadding: 0; rightPadding: 100
+                font.family: "Noto Sans"; font.pixelSize: root.fieldFontSize
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: root.fieldInset; rightPadding: 104
                 enabled: !root.submitting
                 onAccepted: root.login()
                 Keys.onEscapePressed: clear()
                 KeyNavigation.tab: reveal
                 Accessible.name: "Password"
-                background: Rectangle { color: "transparent"; Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.loginError ? "#ffb4a6" : password.activeFocus ? "#fff3df" : "#a0e0e8e7" } }
+                background: Underline {
+                    focused: password.activeFocus
+                    lineColor: root.loginError ? "#ffb4a6" : root.ink
+                }
                 Button {
                     id: reveal
-                    x: parent.width - width - 54; anchors.verticalCenter: parent.verticalCenter
-                    width: 38; height: 38
+                    anchors.right: parent.right
+                    anchors.rightMargin: 51
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 42; height: 42
                     enabled: !root.submitting
                     checkable: true
                     onToggled: password.echoMode = checked ? TextInput.Normal : TextInput.Password
                     KeyNavigation.tab: signIn
                     Accessible.name: checked ? "Hide password" : "Show password"
                     contentItem: StrokeIcon { glyph: "eye"; ink: root.ink }
-                    padding: 8
+                    padding: 9
                     background: Rectangle { radius: 19; color: reveal.hovered || reveal.activeFocus ? "#25f1c893" : "transparent"; border.width: reveal.activeFocus ? 1 : 0; border.color: root.ink }
                 }
             }
             Button {
                 id: signIn
                 objectName: "signInButton"
-                x: 412; y: 90; width: 48; height: 58
+                anchors.right: password.right
+                anchors.rightMargin: 3
+                anchors.verticalCenter: password.verticalCenter
+                width: 42; height: 42
                 enabled: !root.submitting
                 Accessible.name: "Sign in"
                 KeyNavigation.tab: session
@@ -144,23 +152,25 @@ Rectangle {
                 scale: down ? 0.95 : hovered ? 1.035 : 1
                 Behavior on scale { NumberAnimation { duration: 140 } }
                 contentItem: StrokeIcon { glyph: "arrow"; ink: root.ink }
-                padding: 18
+                padding: 10
                 background: Rectangle { color: signIn.activeFocus || signIn.hovered ? "#25ffffff" : "transparent"; radius: 4 }
             }
             ComboBox {
                 id: session
                 objectName: "sessionPicker"
-                x: 0; y: 167; width: 460; height: 55
+                anchors.top: password.bottom
+                anchors.topMargin: root.rowGap
+                width: parent.width; height: root.rowHeight
                 model: root.sessions
                 textRole: "name"
                 currentIndex: root.sessions.lastIndex >= 0 ? root.sessions.lastIndex : 0
                 enabled: !root.submitting
-                leftPadding: 0; rightPadding: 48
-                KeyNavigation.tab: sleepButton.visible ? sleepButton : restartButton.visible ? restartButton : powerButton
+                leftPadding: root.fieldInset; rightPadding: 48
+                KeyNavigation.tab: sleepButton.visible ? sleepButton : restartButton.visible ? restartButton : powerButton.visible ? powerButton : username
                 Accessible.name: "Session"
-                contentItem: Text { text: session.displayText; color: root.ink; font.family: "Noto Sans"; font.pixelSize: 17; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
+                contentItem: Text { text: session.displayText; color: root.ink; font.family: "Noto Sans"; font.pixelSize: root.fieldFontSize; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
                 indicator: StrokeIcon { x: session.width-width-14; anchors.verticalCenter: parent.verticalCenter; width: 19; height: 19; glyph: "down"; ink: root.ink }
-                background: Rectangle { color: session.activeFocus ? "#20ffffff" : "transparent"; radius: 4 }
+                background: Underline { focused: session.activeFocus }
                 delegate: ItemDelegate {
                     required property var model
                     required property int index
@@ -179,22 +189,27 @@ Rectangle {
             Text {
                 id: message
                 objectName: "authMessage"
-                x: 0; y: 225; width: 460; height: 40
+                anchors.top: session.bottom
+                anchors.topMargin: 10
+                x: root.fieldInset; width: parent.width - 2 * x; height: 52
                 text: root.notice
                 textFormat: Text.PlainText
                 wrapMode: Text.Wrap
                 color: root.loginError ? "#ffd0be" : root.muted
-                font.family: "Noto Sans"; font.pixelSize: 27
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                font.family: "Noto Sans"; font.pixelSize: 18
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                maximumLineCount: 2
+                elide: Text.ElideRight
                 Accessible.role: Accessible.AlertMessage
             }
         }
         Row {
-            x: 1025; y: 895
+            anchors.right: auth.right
+            anchors.top: auth.bottom
+            anchors.topMargin: 26
             spacing: 12
-            opacity: 1
-            QuietButton { id: sleepButton; text: "Sleep"; glyph: "moon"; visible: root.authBackend.canSuspend; onClicked: root.authBackend.suspend(); KeyNavigation.tab: restartButton.visible ? restartButton : powerButton }
+            QuietButton { id: sleepButton; text: "Sleep"; glyph: "moon"; visible: root.authBackend.canSuspend; onClicked: root.authBackend.suspend(); KeyNavigation.tab: restartButton.visible ? restartButton : powerButton.visible ? powerButton : username }
             QuietButton { id: restartButton; text: "Restart"; glyph: "restart"; visible: root.authBackend.canReboot; onClicked: root.authBackend.reboot(); KeyNavigation.tab: powerButton.visible ? powerButton : username }
             QuietButton { id: powerButton; text: "Shut down"; glyph: "power"; visible: root.authBackend.canPowerOff; onClicked: root.authBackend.powerOff(); KeyNavigation.tab: username }
         }
@@ -227,29 +242,17 @@ Rectangle {
         }
         background: Rectangle { radius: height / 2; color: control.hovered ? "#663c4c58" : "#25102437"; border.width: 1; border.color: control.activeFocus ? root.ink : "#708a8b88"; Behavior on color { ColorAnimation { duration: 160 } } }
     }
-    component HaloArc: Canvas {
-        property bool lower: false
-        onPaint: {
-            const c = getContext("2d");
-            c.reset();
-            const count = 150;
-            const cx = lower ? 277 : 291, cy = lower ? 206 : 265;
-            const start = lower ? -0.08 : -3.08, span = lower ? 1.52 : 1.67;
-            for (let i = 0; i < count; i++) {
-                const t = i / count, a = start + span * t;
-                const alpha = Math.pow(Math.sin(Math.PI * t), 2);
-                for (const layer of [{w:15,a:0.06},{w:7,a:0.16},{w:2.5,a:0.55},{w:1.1,a:1}]) {
-                    // Use a short elliptical arc; the faint wide strokes supply the glow.
-                    c.beginPath();
-                    c.moveTo(cx + 257*Math.cos(a), cy + 205*Math.sin(a));
-                    const b = start + span*(i+1.4)/count;
-                    c.lineTo(cx + 257*Math.cos(b), cy + 205*Math.sin(b));
-                    c.strokeStyle = "rgba(255,213,163," + alpha*layer.a + ")";
-                    c.lineWidth = layer.w;
-                    c.lineCap = "round";
-                    c.stroke();
-                }
-            }
+    component Underline: Rectangle {
+        id: surface
+        property bool focused: false
+        property color lineColor: root.ink
+        color: focused ? "#77142334" : "#42142334"
+        radius: 6
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: surface.focused ? 2 : 1
+            color: surface.lineColor
         }
     }
     component StrokeIcon: Canvas {

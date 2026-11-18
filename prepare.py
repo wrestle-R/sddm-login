@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 import shutil
-from theme_tools import blurred_wallpapers,validate_theme
+from theme_tools import validate_theme
 
 HERE=Path(__file__).resolve().parent
 

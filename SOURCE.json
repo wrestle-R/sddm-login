@@ -1,12 +1,12 @@
 {
   "repository": "https://github.com/wrestle-R/Linux",
-  "commit": "6a3738a76feb748416cbde07ff7e17b0cd919be6",
+  "commit": "d10bf3836ad95371062a8bd82cd83050471132b0",
   "path": "End-4/slumber/",
-  "snapshot": "Standalone minimal right-aligned redesign; supersedes pinned Twin Halo theme.",
+  "snapshot": "Shared sharp landscape theme with aligned username, password and session controls.",
   "sha256": {
-    "theme/Main.qml": "237d8e35ed9b233d2b231f31526029d0849c55ad07da0b0f973494a6cb5dbf4b",
-    "theme/metadata.desktop": "2b9edb3f52f5f8ed27003cdbfc0987cc8067c4abfa2f03c767cf96c0f4910e5d",
+    "theme/Main.qml": "985baa4b8b2ba8a759d471e3a865360ecd495c652dda2edb6373147c4185600b",
+    "theme/metadata.desktop": "393c17da287b6f440a14bf9b12783fa6929a676072ebad3070bec25c2f116f5a",
     "theme/theme.conf": "e0f4d286ed9d441ca28f540093895b0fd3d5234a94c6b00644f2f61034ed5ee1",
-    "theme_tools.py": "dcf9950823339c198c05e43da7d5e7892f56bfb32a0bf387fcfea38eaf216842"
+    "theme_tools.py": "3948d36705771052f6d1811f5a93f63da7bdd17a378458705fb6bfeb9df01841"
   }
 }

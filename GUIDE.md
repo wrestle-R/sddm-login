@@ -2,13 +2,13 @@
 
 **Supported platform: Arch Linux + Hyprland only.**
 
-Minimal right-aligned login: sharp wallpaper, geometric clock and aligned username, password and session controls. This standalone redesign supersedes the earlier Twin Halo snapshot.
+The login screen puts a geometric clock and three aligned controls over a sharp wallpaper. The standalone theme and Slumber installer use the same layout.
 
 SDDM handles login and session selection. The sibling Slumber repo covers the in-session lockscreen, display-off mode, notifications and charging controls. No PAM or bootloader changes are needed.
 
 ## Prepare and preview
 
-Requires Python3, ImageMagick (`magick`), Qt6 SDDM (`sddm-greeter-qt6`), QtQuick, Controls and Layouts. No QtQuick.Effects shader is required. Bring your own wallpaper; images are not uploaded.
+Requires Python 3, Qt6 SDDM (`sddm-greeter-qt6`), Qt Quick and Qt Quick Controls. Bring your own local wallpaper.
 
 Choose a directory that does not exist:
 
@@ -17,7 +17,7 @@ python3 prepare.py --wallpaper "$HOME/Pictures/Wallpapers/hehe.jpg" --output /tm
 sddm-greeter-qt6 --test-mode --theme /tmp/rdp-login-preview
 ```
 
-Preparation copies the selected wallpaper and validates the complete theme in SDDM's software-rendered test mode. Missing dependencies, conversion errors or invalid QML stop before writing the output directory. Existing output directories are refused. Remove only your disposable preview directory before preparing again.
+Preparation copies the selected wallpaper and validates the complete theme in SDDM's software-rendered test mode. Missing dependencies, unreadable wallpaper or invalid QML stop before writing the output directory. Existing output directories are refused. Remove only your disposable preview directory before preparing again.
 
 The wallpaper is static and sharp, with no shader or animation dependency. Password submission starts immediately, independent of animation. Failure clears and masks the password and restores focus. Text messages stay plain text. Missing background images retain a dark background with usable controls.
 
@@ -48,11 +48,8 @@ sudo mv /etc/sddm.conf.d/91-rdp-login.conf /etc/sddm.conf.d/91-rdp-login.conf.di
 
 For future source updates, retain private backups, preview first and use the guarded canonical installer rather than overwriting local edits. Git pull updates source only.
 
-## Historical verification
+## Verification
 
-Canonical `test_sddm.py` passed: offline/deterministic blur preparation, conversion failure before writes, invalid-QML refusal, actual SDDM software rendering and missing-image loading, native mock-auth validation, duplicate suppression, password clearing/masking, focus and bounded motion. Actual Enter/Escape/Tab were exercised in a disposable preview. A normal password login and reboot after installation still need user verification; test mode cannot prove those.
+The native SDDM smoke test checks rendering with and without wallpaper. The native mock-auth test checks matching row width, text inset and spacing, duplicate submission, password clearing and masking, focus on failure, and plain-text messages. A normal login is the end-to-end check for real credentials.
 
-The exact theme and shared `theme_tools.py` hashes are recorded in `SOURCE.json`. Original author/MIT theme declaration remains in `theme/metadata.desktop`; no personal wallpaper, credentials or private notes are included.
-
-## Current redesign validation
-Native SDDM software-rendered preflight passes with the wallpaper and with missing wallpaper. Real password login and power operations require physical verification. The canonical Linux installer still contains the previous design; do not use it to deploy this standalone revision.
+`SOURCE.json` records the theme and shared preflight hashes.
