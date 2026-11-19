@@ -1,10 +1,10 @@
 {
   "repository": "https://github.com/wrestle-R/Linux",
-  "commit": "d10bf3836ad95371062a8bd82cd83050471132b0",
+  "commit": "eded78f198cef3a59c0299402354da611c1678a1",
   "path": "End-4/slumber/",
-  "snapshot": "Shared sharp landscape theme with aligned username, password and session controls.",
+  "snapshot": "Shared landscape greeter with optional fingerprint and password sign-in.",
   "sha256": {
-    "theme/Main.qml": "985baa4b8b2ba8a759d471e3a865360ecd495c652dda2edb6373147c4185600b",
+    "theme/Main.qml": "7e9f94b1da71ab8a7786397fcae07ad5253f6a072a02211d3c90fcf627fe7896",
     "theme/metadata.desktop": "393c17da287b6f440a14bf9b12783fa6929a676072ebad3070bec25c2f116f5a",
     "theme/theme.conf": "e0f4d286ed9d441ca28f540093895b0fd3d5234a94c6b00644f2f61034ed5ee1",
     "theme_tools.py": "3948d36705771052f6d1811f5a93f63da7bdd17a378458705fb6bfeb9df01841"

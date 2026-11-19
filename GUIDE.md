@@ -21,6 +21,8 @@ Preparation copies the selected wallpaper and validates the complete theme in SD
 
 The wallpaper is static and sharp, with no shader or animation dependency. Password submission starts immediately, independent of animation. Failure clears and masks the password and restores focus. Text messages stay plain text. Missing background images retain a dark background with usable controls.
 
+The optional **Use fingerprint** button is enabled by the Slumber fingerprint installer once `fprintd` is installed and an enrolled finger has been verified. Password sign-in is available immediately. A failed scan returns you to the password field. [Slumber setup and recovery](https://github.com/wrestle-R/slumber/blob/main/source/README.md#optional-fingerprint-sign-in)
+
 ## Install and recover
 
 On the source machine, the existing guarded installer in `Linux/End-4/slumber/install-system.py` manages `/usr/share/sddm/themes/rdp-slumber` and `/etc/sddm.conf.d/90-rdp-slumber.conf`. Use that installer and its printed backup for updates to this existing installation; it also manages the battery helper. See the sibling `slumber/source/README.md` for exact commands. It checks existing file hashes, validates the staged theme, backs up changes and rolls back partial writes. It never restarts SDDM.
